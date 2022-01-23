@@ -15,36 +15,35 @@ TITLE Program Template     (prog2.asm)
 
 INCLUDE Irvine32.inc
 
-; (insert constant definitions here)
+; constants
+RANGE_MIN = 1
+RANGE_MAX = 46
 
 .data
 ; (insert variable definitions here)
 	; interface strings
 	prog_title	BYTE		"Fibonacci Numbers", 13, 10, "Programmed by Nils Streedain", 13, 10, 0
-	; extra_1		BYTE		"**EC: Displays the numbers in aligned columns.", 13, 10, 0
+	extra		BYTE		"**EC: Displays the numbers in aligned columns.", 13, 10, 0
 	prompt_1	BYTE		"What is your name? ", 0
 	greeting	BYTE		"Hello, ", 0
 	prompt_2a	BYTE		"Enter the number of Fibonacci terms to be displayed.", 13, 10, "Provide the number as an integer in the range [1 .. 46].", 13, 10, 0
 	prompt_2b	BYTE		"How many Fibonacci terms do you want? ", 0
 
 	error		BYTE		"Out of range. Enter a number in [1 .. 46]", 13, 10, 0
-	bye		BYTE		"Results certified by Nils Streedain.", 13, 10, "Goodbye, ", 0
+	bye			BYTE		"Results certified by Nils Streedain.", 13, 10, "Goodbye, ", 0
 
 	; user inputs
 	username	BYTE		33 DUP(0)
 	num_fibs	DWORD		?
 
-	; program values
-	range_min	DWORD		1
-	range_max	DWORD		46
-	curr_num	DWORD		?
-
 .code
 main PROC
 
-; Prints the program title & author's name.
+; Prints the program title, author's name, & extra credit tag.
 introduction:
 	mov		edx, OFFSET prog_title
+	call	WriteString
+	mov		edx, OFFSET extra
 	call	WriteString
 
 ; Asks for and stores user's name. Also greets user using the name.
@@ -79,9 +78,9 @@ fibPrompt:
 
 	; check if input is out of range
 	; (ReadInt already stores input in eax)
-	cmp		eax, range_min
+	cmp		eax, RANGE_MIN
 	jl		outOfRange
-	cmp		eax, range_max
+	cmp		eax, RANGE_MAX
 	jg		outOfRange
 	
 	; if not outOfRange, store num_fibs & then displayFibs
@@ -94,9 +93,43 @@ outOfRange:
 	call	WriteString
 	jmp		fibPrompt
 
-; 4. Display Fibs
+; Starts a counted loop to print out a certain number of Fibonacci numbers.
 displayFibs:
+	; eax & ebx are used to store current fib values
+	mov		eax, 0
+	mov		ebx, 0
+	; ecx stores the number of fibs to find/print, this is decreased after each loop
+	mov		ecx, num_fibs
 
+; Calculates the next fibonacci number
+calcNthFib:
+	; if eax is 0, it is increased
+	; (this is for the first two iterations where 1 is printed)
+	cmp		eax, 0
+	je		incEbx
+
+	; add eax to ebx
+	; (these will be swapped later so eax is always larger)
+	add		ebx, eax
+
+; Swaps eax & ebx after they have been added together in ebx. This is done because the old ebx value is unimportant but the larger of the two still need to be in the same order. eax is also printed.
+swapAndPrint:
+	; swap eax & ebx using edx as temp
+	mov		edx, eax
+	mov		eax, ebx
+	mov		ebx, edx
+
+	; print eax (current fib number) & restart the loop for the next number.
+	call	WriteDec
+	call	Crlf
+	loop	calcNthFib
+
+	; once ecx = 0, jump to goodbye
+	jmp		goodbye
+
+incEbx:
+	inc		ebx
+	jmp		swapAndPrint
 
 ; Gives the user a salutation & exits the program.
 goodbye:
