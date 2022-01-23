@@ -20,7 +20,6 @@ RANGE_MIN = 1
 RANGE_MAX = 46
 
 .data
-; (insert variable definitions here)
 	; interface strings
 	prog_title	BYTE		"Fibonacci Numbers", 13, 10, "Programmed by Nils Streedain", 13, 10, 0
 	extra		BYTE		"**EC: Displays the numbers in aligned columns.", 13, 10, 0
@@ -28,7 +27,6 @@ RANGE_MAX = 46
 	greeting	BYTE		"Hello, ", 0
 	prompt_2a	BYTE		"Enter the number of Fibonacci terms to be displayed.", 13, 10, "Provide the number as an integer in the range [1 .. 46].", 13, 10, 0
 	prompt_2b	BYTE		"How many Fibonacci terms do you want? ", 0
-
 	error		BYTE		"Out of range. Enter a number in [1 .. 46]", 13, 10, 0
 	tab_char	BYTE		9, 0
 	bye			BYTE		13, 10, "Results certified by Nils Streedain.", 13, 10, "Goodbye, ", 0
@@ -37,6 +35,7 @@ RANGE_MAX = 46
 	username	BYTE		33 DUP(0)
 	num_fibs	DWORD		?
 	
+	; program variables
 	fib_1		DWORD		0
 	fib_2		DWORD		0
 
@@ -73,16 +72,14 @@ displayinstructions:
 	mov		edx, OFFSET prompt_2a
 	call	WriteString
 	
-; Prompts for number of fibs in the range 1-46. If the input is out of range,
-; the program jumps to outOfRange.
+; Prompts for number of fibs in the range 1-46. If the input is out of range, the program jumps to outOfRange.
 fibPrompt:
 	; prompts for number of fibs in range
 	mov		edx, OFFSET prompt_2b
 	call	WriteString
 	call	ReadInt
 
-	; check if input is out of range
-	; (ReadInt already stores input in eax)
+	; check if input is out of range (ReadInt already stores input in eax)
 	cmp		eax, RANGE_MIN
 	jl		outOfRange
 	cmp		eax, RANGE_MAX
@@ -92,8 +89,7 @@ fibPrompt:
 	mov		num_fibs, eax
 	jmp		displayFibs
 	
-; Gives the user an out of range error & then jumps to fibPrompt to get
-; another user input.
+; Gives the user an out of range error & then jumps to fibPrompt to get another user input.
 outOfRange:
 	mov		edx, OFFSET error
 	call	WriteString
@@ -125,7 +121,7 @@ swapAndPrint:
 	mov		edx, OFFSET tab_char
 	call	WriteString
 	
-	; Find the remainder of the curent count divided by four. This is done so every four fibs, a newline is printed.
+	; Find the remainder of the curent num_fibs count over three. This is done so every four fibs, a new line is printed.
 	mov		ebx, 3
 	cdq
 	div		ebx
@@ -135,7 +131,7 @@ swapAndPrint:
 
 ; Jump point for when no new line is needed to create a new column.
 noNewLine:
-	loop	calcNthFib			; restart the loop for the next number
+	loop	calcNthFib			; restart the loop for the next number (decreases ecx by 1)
 	jmp		goodbye				; once ecx = 0, jump to goodbye
 
 ; Increments ebx for the first 2 iterations of calcNthFib. Then jumps to swapAndPrint to skip the addition of fib 1&2.
