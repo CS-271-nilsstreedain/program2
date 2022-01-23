@@ -30,11 +30,15 @@ RANGE_MAX = 46
 	prompt_2b	BYTE		"How many Fibonacci terms do you want? ", 0
 
 	error		BYTE		"Out of range. Enter a number in [1 .. 46]", 13, 10, 0
-	bye			BYTE		"Results certified by Nils Streedain.", 13, 10, "Goodbye, ", 0
+	tab_char	BYTE		9, 0
+	bye			BYTE		13, 10, "Results certified by Nils Streedain.", 13, 10, "Goodbye, ", 0
 
 	; user inputs
 	username	BYTE		33 DUP(0)
 	num_fibs	DWORD		?
+	
+	fib_1		DWORD		0
+	fib_2		DWORD		0
 
 .code
 main PROC
@@ -68,8 +72,9 @@ getUserInfo:
 displayinstructions:
 	mov		edx, OFFSET prompt_2a
 	call	WriteString
-
-; Prompts for number of fibs in the range 1-46. If the input is out of range, the program jumps to outOfRange.
+	
+; Prompts for number of fibs in the range 1-46. If the input is out of range,
+; the program jumps to outOfRange.
 fibPrompt:
 	; prompts for number of fibs in range
 	mov		edx, OFFSET prompt_2b
@@ -86,8 +91,9 @@ fibPrompt:
 	; if not outOfRange, store num_fibs & then displayFibs
 	mov		num_fibs, eax
 	jmp		displayFibs
-
-; Gives the user an out of range error & then jumps to fibPrompt to get another user input.
+	
+; Gives the user an out of range error & then jumps to fibPrompt to get
+; another user input.
 outOfRange:
 	mov		edx, OFFSET error
 	call	WriteString
@@ -95,40 +101,46 @@ outOfRange:
 
 ; Starts a counted loop to print out a certain number of Fibonacci numbers.
 displayFibs:
-	; eax & ebx are used to store current fib values
-	mov		eax, 0
-	mov		ebx, 0
-	; ecx stores the number of fibs to find/print, this is decreased after each loop
-	mov		ecx, num_fibs
+	mov		eax, fib_1			; eax stores the current fib number
+	mov		ecx, num_fibs		; ecx stores the number of fibs to find, decreased after each loop
 
 ; Calculates the next fibonacci number
 calcNthFib:
-	; if eax is 0, it is increased
-	; (this is for the first two iterations where 1 is printed)
-	cmp		eax, 0
-	je		incEbx
+	mov		eax, fib_1			; resets eax to the curr fib
+	cmp		eax, 0				; if eax is 0, it is increased
+	je		incEax				; (this is for the first two iterations where 1 is printed)
 
-	; add eax to ebx
-	; (these will be swapped later so eax is always larger)
-	add		ebx, eax
+	add		eax, fib_2			; calcs the next fib by adding fib_2 to curr fib
 
-; Swaps eax & ebx after they have been added together in ebx. This is done because the old ebx value is unimportant but the larger of the two still need to be in the same order. eax is also printed.
+; Moves fib_1 -> fib_2 & eax -> fib_1. Also prints curr fib.
 swapAndPrint:
-	; swap eax & ebx using edx as temp
-	mov		edx, eax
-	mov		eax, ebx
-	mov		ebx, edx
+	; swap fib_1 & fib_2 & set fib_1 to new fib in eax
+	mov		ebx, fib_1
+	mov		fib_2, ebx
+	mov		fib_1, eax
 
-	; print eax (current fib number) & restart the loop for the next number.
-	call	WriteDec
+	call	WriteDec			; print curr fib number
+
+	; insert tab to create columns
+	mov		edx, OFFSET tab_char
+	call	WriteString
+	
+	; Find the remainder of the curent count divided by four. This is done so every four fibs, a newline is printed.
+	mov		ebx, 3
+	cdq
+	div		ebx
+	cmp		edx, 0
+	jne		noNewLine
 	call	Crlf
-	loop	calcNthFib
 
-	; once ecx = 0, jump to goodbye
-	jmp		goodbye
+; Jump point for when no new line is needed to create a new column.
+noNewLine:
+	loop	calcNthFib			; restart the loop for the next number
+	jmp		goodbye				; once ecx = 0, jump to goodbye
 
-incEbx:
-	inc		ebx
+; Increments ebx for the first 2 iterations of calcNthFib. Then jumps to swapAndPrint to skip the addition of fib 1&2.
+incEax:
+	inc		eax
 	jmp		swapAndPrint
 
 ; Gives the user a salutation & exits the program.
