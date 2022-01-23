@@ -1,4 +1,4 @@
-TITLE Program Template     (prog1.asm)
+TITLE Program Template     (prog2.asm)
 
 ; Author:					Nils Streedain
 ; Last Modified:			1/16/2022
