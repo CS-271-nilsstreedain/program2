@@ -1,4 +1,4 @@
-# Program 2
+# Fibonacci Numbers
 
 ## Objectives
 1. Getting string input
